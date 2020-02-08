@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Mongo Chat</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css">
+    <style>
+        #messages{
+            height: 300px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6 offset-md-3 col-sm-12">
+                <h1 class="text-center">
+                    MongoChat
+                    <button class="btn btn-danger" id="clear">Clear</button>
+                </h1>
+                <div id="status"></div>
+                <div id="chat">
+                    <input type="text" name="" id="username" class="form-control" placeholder="Enter name...">
+                    <br>
+                    <div class="card">
+                        <div class="card-block" id="messages">
+                        </div>
+                    </div>
+                    <textarea name="" id="textarea" class="form-control" placeholder="Enter message..."></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.1.1/socket.io.js"></script>
+    <script>
+        (function() {
+            const element = (id) => {
+                return document.getElementById(id)
+            }
+
+            const status = element('status')
+            const messages = element('messages')
+            const textarea = element('textarea')
+            const username = element('username')
+            const clear = element('clear')
+
+            //status
+            const statusDefault = status.textContent
+
+            const setStatus = s => {
+                status.textContent = s
+
+                if(s !== statusDefault){
+                    var delay = setTimeout(() => {
+                        setStatus(statusDefault)
+                    }, 4000)
+                }
+            }
+
+
+            //connect to socket.io
+            const socket = io.connect('http://localhost:4000')
+
+            if(socket != undefined) {
+                //console.log('Connected to Socket io...')
+                //output
+                socket.on('output', (data) => {
+                     if(data.length){
+                         data.map(msg => {
+                             //Build out message
+                             var message = document.createElement('div')
+                             message.setAttribute('class', 'chat-message')
+                             message.textContent = `${msg.name}: ${msg.message}`
+                             messages.appendChild(message)
+                             //messages.insertBefore(message, messages.firstChild)
+                         })
+                     }
+                })
+
+                //get status
+                socket.on('status', data => {
+                    setStatus((typeof data === 'object') ? data.message : data)
+
+                    if(data.clear) {
+                        textarea.value = '';
+                    }
+                })
+
+                //input
+                textarea.addEventListener('keydown', e => {
+                    if(e.which === 13 && event.shiftKey == false){
+                        socket.emit('input', {
+                            name: username.value,
+                            message: textarea.value
+                        })
+
+                        e.preventDefault()
+                        textarea.value = '';
+                    }
+                })
+
+                //handle clear
+                clear.addEventListener('click', e => {
+                    socket.emit('clear')
+                })
+
+                socket.on('cleared', () => {
+                    messages.textContent = ''
+                })
+            }
+        })()
+    </script>
+</body>
+</html>

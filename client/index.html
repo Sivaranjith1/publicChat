@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Random chat</title>
+    <link rel="stylesheet" href="css/cssCheatStyleSheet/style.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <div class="nav black">
+        <h1 class="white-text center no-padding">Mate chat</h1>
+    </div>
+
+    <div class="content">
+        <div class="background-image"></div>
+        <div class="overlay"></div>
+        <div class="hero">
+
+            <h1 class="title white-text center">Public chat</h1>
+
+
+            <span class="flex1">
+                <span>
+                    <input type="text" class="input username" placeholder="Enter a username">
+                    <button class="btn small filled black white-text username-text">Knapp</button>
+                </span>
+            </span>
+        </div>
+    </div>
+
+</body>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.1.1/socket.io.js"></script>
+<script>
+
+
+
+
+    (function () {
+        const element = (id) => {
+            return document.getElementById(id)
+        }
+
+        document.querySelector('.username-text').addEventListener('click', () => {
+            const usernameInp = document.querySelector('.username').value
+
+            if (usernameInp == '') {
+                console.log(usernameInp)
+                return
+            }
+
+            document.querySelector('.content').innerHTML = ` <div class="container">
+                <div class="row">
+                    <div class="col-md-6 offset-md-3 col-sm-12">
+                        <div id="status"></div>
+                        <div id="chat">
+                            <div class="card">
+                                <div class="card-block" id="messages">
+                                </div>
+                            </div>
+                            <input type="text" id="textarea" class="input" placeholder="Enter message...">
+                        </div>
+                    </div>
+                </div>
+            </div>`
+
+
+
+
+            const status = element('status')
+            const messages = element('messages')
+            const textarea = element('textarea')
+
+            //status
+            const statusDefault = status.textContent
+
+            const setStatus = s => {
+                status.textContent = s
+
+                if (s !== statusDefault) {
+                    var delay = setTimeout(() => {
+                        setStatus(statusDefault)
+                    }, 4000)
+                }
+            }
+
+
+            //connect to socket.io
+            const socket = io.connect('http://localhost:4000')
+
+            if (socket != undefined) {
+                //console.log('Connected to Socket io...')
+                //output
+                socket.on('output', (data) => {
+                    if (data.length) {
+                        data.map(msg => {
+                            //Build out message
+                            var message = document.createElement('div')
+                            message.setAttribute('class', 'chat-message')
+                            message.textContent = `${msg.name}: ${msg.message}`
+                            messages.appendChild(message)
+                            //messages.insertBefore(message, messages.firstChild)
+                        })
+                    }
+                })
+
+                //get status
+                socket.on('status', data => {
+                    setStatus((typeof data === 'object') ? data.message : data)
+
+                    if (data.clear) {
+                        textarea.value = '';
+                    }
+                })
+
+                //input
+                textarea.addEventListener('keydown', e => {
+                    if (e.which === 13 && event.shiftKey == false) {
+                        socket.emit('input', {
+                            name: usernameInp,
+                            message: textarea.value
+                        })
+
+                        e.preventDefault()
+                        textarea.value = '';
+                    }
+                })
+
+                socket.on('cleared', () => {
+                    messages.textContent = ''
+                })
+            }
+        })
+    })()
+</script>
+
+</html>

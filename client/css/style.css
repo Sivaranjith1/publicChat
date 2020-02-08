@@ -1,0 +1,53 @@
+body{
+    max-width: 100vw;
+    overflow-x: hidden;
+    background: rgb(34, 34, 34);
+}
+
+.hero{
+    width: 100vw;
+    position: relative;
+    height: calc(100vh - 57px);
+    display: block;
+    
+}
+
+.nav {
+    margin-bottom: 0;
+}
+.background-image{
+    background-image: url(../static/email.png);
+    background-repeat: no-repeat;
+    background-size: cover;
+    filter: grayscale(0.8);
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    bottom: 0;
+    z-index: -2;
+}
+.overlay{
+    background-color: black;
+    opacity: 0.65;
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    bottom: 0;
+    z-index: -1;
+}   
+
+.username {
+    width: 60vw;
+    min-width: 100px;
+}
+
+.title {
+    padding-top: 3em;
+    font-size: 3em;
+}
+
+.card {
+    width: 100%;
+}
